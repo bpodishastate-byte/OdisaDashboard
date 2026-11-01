@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RO Automation Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0;--g:#10b981;--r:#ef4444;--a:#f59e0b;--b:#3b82f6;--p:#8b5cf6}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:linear-gradient(120deg,#0f172a,#1e3a8a 60%,#0e7490);color:#fff;padding:22px 28px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:22px}header p{margin:3px 0 0;color:#cbd5e1;font-size:13px}
+.btn,select{border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer}
+.btn{background:#fff;color:#1e3a8a}.btn.alt{background:#10b981;color:#fff}select{background:#1e293b;color:#fff}
+main{max-width:1500px;margin:auto;padding:22px}
+#drop{border:2px dashed #94a3b8;border-radius:16px;background:var(--card);padding:60px 20px;text-align:center;color:var(--mu);transition:.2s}
+#drop.over{border-color:var(--b);background:#eff6ff}#drop h2{color:var(--tx);margin:8px 0}
+#drop small{display:block;margin-top:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:18px}
+.k{background:var(--card);border-radius:14px;padding:16px 18px;border:1px solid var(--bd);border-left:5px solid var(--c);box-shadow:0 1px 3px #0001}
+.k span{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}.k b{display:block;font-size:30px;margin-top:4px}
+.k i{font-style:normal;font-size:12px;color:var(--mu)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;margin-bottom:18px}
+.card{background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--bd);box-shadow:0 1px 3px #0001}
+.card h3{margin:0 0 10px;font-size:14px;color:#334155}.cv{position:relative;height:320px}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px;text-align:center}
+th{background:#0f172a;color:#fff;padding:10px 8px;font-size:12px;text-transform:uppercase}
+td{padding:8px;border:1px solid #cbd5e1}td.l{text-align:left}
+tr.t1 td{background:#b4c6e7;font-weight:700}tr.t2 td{background:#ffd966;font-weight:700}
+tr.st td{background:#00b050;color:#fff;font-weight:700;font-size:15px}tr.gt td{background:#0f172a;color:#fff;font-weight:700;font-size:15px}
+tr.ar{cursor:pointer}
+tr.ar td.l:before{content:"\25B6";display:inline-block;font-size:10px;color:#64748b;margin-right:8px;transition:.15s}
+tr.ar.open td.l:before{transform:rotate(90deg)}
+tr.dt>td{background:#f8fafc;padding:12px 14px;text-align:left}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chip{border:1px solid #cbd5e1;background:#fff;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;color:#334155}
+.chip b{margin-left:4px}.chip.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+table.in{font-size:13px;background:#fff}table.in th{background:#334155;font-size:11px}table.in td{padding:6px 8px}
+.in-wrap{max-height:420px;overflow:auto;border:1px solid #cbd5e1;border-radius:8px}
+.in-wrap th{position:sticky;top:0}
+.bd{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill{display:inline-block;min-width:58px;padding:2px 8px;border-radius:99px;font-weight:700}
+.bad{color:#b91c1c;font-weight:700}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#475569;margin:0 2px 10px}.lg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;text-decoration:none}
+.hide{display:none}.bar2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}.bar2 select{background:#1e293b}#note{font-size:12px;color:var(--mu);margin:10px 2px;line-height:1.6}
+.tabs{display:flex;gap:6px;background:#ffffff1f;padding:4px;border-radius:11px}.tab{border:0;background:transparent;color:#cbd5e1;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px;cursor:pointer}.tab.on{background:#fff;color:#1e3a8a}
+.sv{background:#fee2e2;color:#991b1b}.lw{background:#fef3c7;color:#92400e}.ok{background:#d1fae5;color:#065f46}.nd{background:#e2e8f0;color:#475569}
+th.g1{background:#dc2626}th.g2{background:#f59e0b;color:#0f172a}th.g0{background:#0f172a}
+tr.sb td{background:#064e3b;color:#fff;font-weight:700;font-size:15px}
+tr.tb td{font-weight:700;cursor:pointer;border-top:4px solid #fff}tr.tb0 td{background:#bfdbfe}tr.tb1 td{background:#fde68a}
+tr.tb td small{font-weight:500;color:#475569;margin-left:8px}.car{display:inline-block;width:18px;font-size:11px;transition:.15s}tr.tb.col .car{transform:rotate(-90deg)}
+tr.ar td{background:#fff}tr.ar:hover td{background:#f1f5f9}td.ind{padding-left:38px}th.l{text-align:left}td.gs,th.g2:nth-child(4){border-left:3px solid #94a3b8}
+.nm{display:inline-block;min-width:36px;padding:2px 9px;border-radius:99px;font-weight:700}.z{color:#cbd5e1}
+tr.ar td.l:before{display:none}tr.ar td.l:after{content:"  ▸ view ROs";font-size:11px;color:#94a3b8;font-weight:500}tr.ar.open td.l:after{content:"  ▾ hide ROs"}
+.dh{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:10px}.d1{font-size:16px;font-weight:700;margin-bottom:10px}.d1 span{font-size:12px;font-weight:500;color:#64748b}
+.fg{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}.fg label{width:170px;font-size:12px;font-weight:700;color:#475569}
+.chip.c1.on{background:#dc2626;border-color:#dc2626}.chip.c2.on{background:#f59e0b;border-color:#f59e0b;color:#0f172a}
+.srch,.so{border:1px solid #cbd5e1;border-radius:9px;padding:7px 11px;font-size:13px;background:#fff;color:#0f172a;font-weight:400}.srch{min-width:230px}
+.cnt{font-size:12px;color:#64748b;margin:2px 2px 6px}table.in td.rn{padding:8px 10px}.rn b{display:block;font-size:13px}.rn small{color:#64748b;font-size:11px}
+td.bc{white-space:nowrap;text-align:left}.sbar{display:inline-block;width:92px;height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden;vertical-align:middle;margin-right:8px}.sbar i{display:block;height:100%;border-radius:99px}
+.sbar i.sv{background:#dc2626}.sbar i.lw{background:#f59e0b}.sbar i.ok{background:#10b981}.sbar i.nd{background:#94a3b8}
+b.tsv{color:#b91c1c}b.tlw{color:#b45309}b.tok{color:#047857}.mu{color:#94a3b8;font-size:12px}
+
+/* ---- Stock summary table: same layout as the Excel summary ---- */
+#tbl2{border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:14px;width:100%;background:#fff}
+#tbl2>tbody>tr>th,#tbl2>tbody>tr>td{border:1px solid #000;padding:6px 10px;text-align:center;color:#000}
+#tbl2>tbody>tr>th{background:#fff;text-transform:none;font-size:13px;font-weight:700;letter-spacing:0}
+#tbl2>tbody>tr>th.grp{background:#ffff00;font-size:15px}
+#tbl2>tbody>tr>td.l{text-align:left}
+#tbl2>tbody>tr>.gs{border-left:3px solid #000}
+#tbl2>tbody>tr.ar>td{background:#fff;cursor:pointer}#tbl2>tbody>tr.ar:hover>td{background:#eef2f7}
+#tbl2>tbody>tr.ar>td.l:after{content:"  ▸ view ROs";font-size:11px;color:#94a3b8;font-weight:400}#tbl2>tbody>tr.ar.open>td.l:after{content:"  ▾ hide ROs"}
+#tbl2>tbody>tr.t1>td{background:#b4c6e7;font-weight:700}#tbl2>tbody>tr.t2>td{background:#ffd966;font-weight:700}
+#tbl2>tbody>tr.tt>td{cursor:pointer}#tbl2 .car{display:inline-block;width:16px;font-size:10px;transition:.15s}#tbl2 tr.tt.col .car{transform:rotate(-90deg)}
+#tbl2>tbody>tr.st>td{background:#00b050;color:#000;font-weight:700;font-size:15px}
+#tbl2>tbody>tr.gt>td{background:#0f172a;color:#fff;font-weight:700;font-size:15px}
+#tbl2>tbody>tr.dt>td{background:#f8fafc;padding:12px 14px;text-align:left}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+<header><div><h1 id="h1">📊 RO Automation Dashboard</h1><p id="sub">Upload your raw automation data (.xlsx, .xls, .csv) to generate the summary</p></div>
+<div class="tabs"><button class="tab on" id="tb1" onclick="go(1)">Online status</button><button class="tab" id="tb2" onclick="go(2)">Stock</button></div>
+<div id="tools" class="hide"><select id="st"></select> <select id="tr" class="hide"></select> <select id="ctp" title="Avg RO Online % column"></select> <select id="idc" class="hide" title="Column to use as RO name"></select> <select id="idi" class="hide" title="Column to use as RO ID"></select> <button class="btn alt" id="exp">⬇ Export summary + RO details</button> <button class="btn" onclick="f.click()">Upload new file</button></div></header>
+<main>
+<div id="pg1">
+<div id="drop"><div style="font-size:46px">📂</div><h2>Drop your automation file here</h2>or <button class="btn alt" onclick="f.click()">Browse file</button>
+<small>Needs columns: Sales Area, Territory, State, Avg RO Online % (RA Vendor and RO Name/Code optional). Status is read straight from Avg RO Online %: 100 = fully online, 0 = fully offline, anything between = partially offline.</small></div>
+<input type="file" id="f" accept=".xlsx,.xls,.csv,.xlsm,.tsv,.txt" class="hide">
+<div id="dash" class="hide">
+<div class="kpis" id="kpis"></div>
+<div class="card" style="margin-bottom:18px"><h3>Summary table &nbsp;<span style="font-weight:400;color:#64748b">— click any Sales Area row to see its ROs (partially offline, fully offline, ATG offline, MPD offline, fully online)</span></h3><div class="lg"><span><s style="background:#10b981"></s>Fully online</span><span><s style="background:#f59e0b"></s>Partially offline</span><span><s style="background:#ef4444"></s>Fully offline</span><span style="color:#64748b">· bar shows each area's status mix</span></div><div class="wrap"><table id="tbl"></table></div></div>
+<div id="note"></div>
+<div class="grid">
+<div class="card"><h3>Fully online vs partially / fully offline ROs by Sales Area</h3><div class="cv"><canvas id="c1"></canvas></div></div>
+<div class="card"><h3>RO status split</h3><div class="cv"><canvas id="c2"></canvas></div></div>
+<div class="card"><h3>% Fully online by Sales Area</h3><div class="cv"><canvas id="c3"></canvas></div></div>
+<div class="card"><h3>Offline tanks, ATG offline ROs &amp; MPD offline ROs by Sales Area</h3><div class="cv"><canvas id="c4"></canvas></div></div>
+<div class="card" id="vcard"><h3>ROs by vendor</h3><div class="cv"><canvas id="c5"></canvas></div></div>
+</div></div>
+</div>
+<div id="pg2" class="hide">
+<div id="drop2"><div style="font-size:46px">⛽</div><h2>Drop your Dry RO / stock file here</h2>or <button class="btn alt" onclick="f2.click()">Browse file</button>
+<small>Needs columns: RO ID, Retail Outlet, Sales Area, Territory, State, Product Name (EBMS / HSD), Stock %. Only EBMS (MS) and HSD are used – Speed and other products are ignored. Severe low = 0 to 10%, Low = 11 to 25%.</small></div>
+<input type="file" id="f2" accept=".xlsx,.xls,.csv,.xlsm,.tsv,.txt" class="hide">
+<div id="dash2" class="hide">
+<div class="bar2"><select id="st2"></select> <select id="tr2" class="hide"></select> <button class="btn alt" id="exp2">⬇ Export stock summary + RO details</button> <button class="btn" style="border:1px solid #cbd5e1" onclick="f2.click()">Upload new file</button></div>
+<div class="kpis" id="kpis2"></div>
+<div class="card" style="margin-bottom:18px"><h3>Dry RO summary &nbsp;<span style="font-weight:400;color:#64748b">— click a territory row to fold it, click a Sales Area row to see its ROs</span></h3>
+<div class="lg"><span><s style="background:#dc2626"></s>Severe low: stock 0 to 10%</span><span><s style="background:#f59e0b"></s>Low: stock 11% to 25%</span><span>MS = EBMS · Common = same RO is in that range for both MS and HSD</span></div>
+<div class="wrap"><table id="tbl2"></table></div></div>
+<div id="note2"></div>
+<div class="grid">
+<div class="card"><h3>Severe low (0–10%) ROs by Sales Area</h3><div class="cv"><canvas id="s1"></canvas></div></div>
+<div class="card"><h3>Low (11–25%) ROs by Sales Area</h3><div class="cv"><canvas id="s2"></canvas></div></div>
+<div class="card"><h3>Stock level health – MS vs HSD (ROs)</h3><div class="cv"><canvas id="s3"></canvas></div></div>
+<div class="card"><h3>Stock % spread – MS vs HSD (ROs)</h3><div class="cv"><canvas id="s4"></canvas></div></div>
+</div></div></div>
+</main>
+<script id="saved" type="application/json"></script>
+<script>
+const $=id=>document.getElementById(id),f=$('f'),drop=$('drop');let ALL=[],charts={},AREAS=[],FILT={};
+const ABBR={bhubaneswar:'BBSR',sambalpur:'SBP'};
+const nk=k=>String(k).toLowerCase().replace(/[^a-z]/g,'');
+const num=v=>{const n=parseFloat(v);return isNaN(n)||n<0?0:n};   // -1 (or blank) => 0
+const cl=s=>String(s==null?'':s).replace(/\s+/g,' ').trim();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const IDKEYS=/^(roname|rocode|ro|rono|sapcode|customercode|dealername|dealer|outletname|outlet|sitename|location|name|code|roid|sapid|customername)$/;
+// status: full | part | fulloff.  label gives the exact reason
+const META={full:['Fully Online','#d1fae5','#065f46'],part:['Partially offline','#fef3c7','#92400e'],fulloff:['Fully offline','#fee2e2','#991b1b']};
+f.onchange=e=>e.target.files[0]&&load(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>e.dataTransfer.files[0]&&load(e.dataTransfer.files[0]));
+function load(file){const r=new FileReader();r.onload=e=>{try{
+ const wb=XLSX.read(e.target.result,{type:'array'});let rows=[];
+ for(const n of wb.SheetNames){rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''});if(rows.length&&'salesarea' in Object.fromEntries(Object.keys(rows[0]).map(k=>[nk(k),1])))break}
+ procAuto(rows,file.name,true)}catch(err){alert('Could not read file: '+err)}};r.readAsArrayBuffer(file)}
+function procAuto(rows,name,save){try{
+ ALL=rows.map((r,i)=>{const o={_i:i+2,_raw:r};for(const k in r){o[nk(k)]=r[k]}return o}).filter(o=>cl(o.salesarea)).map(o=>{
+  const onT=num(o.noofonboardedtanks),lnT=Math.min(num(o.noofonlinetanks),onT),onM=num(o.noofonboardedmpds),lnM=Math.min(num(o.noofonlinempds),onM);
+  return{state:cl(o.state)||'Unknown',terr:cl(o.territory)||'-',area:cl(o.salesarea),onT,lnT,onM,lnM,raw:o._raw,row:o._i,id:'',rid:'',vendor:cl(o.ravendor)||'Unknown'}});
+ if(!ALL.length)throw 'No rows with a "Sales Area" column found';
+ const hd=Object.keys(rows[0]||{}),skip=/^(salesarea|territory|state|region|zone|district|area|ravendor|vendor|slno|sno|srno|noof)/;
+ const pri=[/roname/,/dealername|outletname|customername|sitename|retailoutlet/,/name/,/rocode|sapcode|customercode|dealercode|code/,/^ro/,/id$/];
+ let pick='';for(const p of pri){pick=hd.find(h=>!skip.test(nk(h))&&p.test(nk(h)));if(pick)break}
+ if(!pick)pick=hd.find(h=>!skip.test(nk(h)))||'';
+ const pri2=[/roid|rocode|sapcode|customercode|dealercode/,/code/,/id$/,/^rono/];let pk2='';for(const p of pri2){pk2=hd.find(h=>h!==pick&&!skip.test(nk(h))&&p.test(nk(h)));if(pk2)break}
+ $('idi').innerHTML='<option value="">RO ID: (none)</option>'+hd.map(h=>`<option value="${esc(h)}" ${h==pk2?'selected':''}>RO ID: ${esc(h)}</option>`).join('');
+ $('idc').innerHTML='<option value="">RO name: (row number)</option>'+hd.map(h=>`<option value="${esc(h)}" ${h==pick?'selected':''}>RO name: ${esc(h)}</option>`).join('');setIds();pctInit(hd);
+ const sts=[...new Set(ALL.map(r=>r.state))].sort();$('st').innerHTML='<option value="">All states</option>'+sts.map(s=>`<option>${esc(s)}</option>`).join('');
+ $('sub').dataset.a=$('sub').textContent=`${name} · ${ALL.length.toLocaleString()} ROs loaded`;drop.classList.add('hide');$('dash').classList.remove('hide');$('tools').classList.remove('hide');render();if(save)persist('auto',rows,name)
+ }catch(err){alert('Could not read file: '+err)}}
+const PC=/%|percent|pct/i,pn=v=>{const s=cl(v).replace('%','');return s===''||isNaN(+s)?null:+s};let OFFC={};
+function pctInit(hd){const pick=hd.find(h=>/avg|average/i.test(h)&&/online/i.test(h))||hd.find(h=>PC.test(h)&&/online/i.test(h)&&!/offline/i.test(h))||'';
+ $('ctp').innerHTML='<option value="">Avg RO Online %: (none)</option>'+hd.map(h=>`<option value="${esc(h)}" ${h==pick?'selected':''}>Avg RO Online %: ${esc(h)}</option>`).join('');
+ const oc=re=>hd.find(h=>re.test(h)&&/offline/i.test(h)&&!PC.test(h))||'';OFFC={t:oc(/tank|atg/i),m:oc(/mpd/i)};classify()}
+function classify(){const c=$('ctp').value,all=[];
+ ALL.forEach(r=>{r.ap=pn(r.raw[c]);r.ap!=null&&all.push(r.ap)});
+ const sc=all.length&&Math.max(...all)<=1?100:1;
+ ALL.forEach(r=>{const a=r.ap==null?null:r.ap*sc,
+  offT=OFFC.t?num(r.raw[OFFC.t]):r.onT-r.lnT,offM=OFFC.m?num(r.raw[OFFC.m]):r.onM-r.lnM;let full,allOff;
+  if(a!=null){full=a>=99.9999;allOff=a<=0}else{full=offT===0&&offM===0;allOff=!full&&(r.lnT+r.lnM)===0}
+  Object.assign(r,{offT,offM,full,offRO:!full,cat:full?'full':allOff?'fulloff':'part',apv:a,atg:offT>0,mpd:offM>0});
+  r.reason=full?'All online':[r.atg?'ATG offline':'',r.mpd?'MPD offline':''].filter(Boolean).join(' + ')||'Avg online % below 100'})}
+$('ctp').onchange=()=>{classify();FILT={};render()};
+const setIds=()=>{const c=$('idc').value,d=$('idi').value;ALL.forEach(r=>{r.id=cl(c?r.raw[c]:'')||('Row '+r.row);r.rid=cl(d?r.raw[d]:'')})};
+$('idc').onchange=$('idi').onchange=()=>{setIds();render()};
+const subset=()=>{const sf=$('st').value,tf=$('tr').value;return ALL.filter(r=>(!sf||r.state===sf)&&(!tf||r.terr===tf))};
+$('st').onchange=()=>{FILT={};const sf=$('st').value,t=$('tr');if(sf){const ts=[...new Set(ALL.filter(r=>r.state===sf).map(r=>r.terr))].sort();t.innerHTML='<option value="">All territories</option>'+ts.map(x=>`<option>${esc(x)}</option>`).join('');t.classList.remove('hide')}else{t.innerHTML='';t.classList.add('hide')}render()};
+$('tr').onchange=()=>{FILT={};render()};
+const agg=rs=>{const t=rs.length,full=rs.filter(r=>r.cat=='full').length,fo=rs.filter(r=>r.cat=='fulloff').length;
+ return{t,full,fo,part:t-full-fo,off:t-full,atg:rs.filter(r=>r.atg).length,mp:rs.filter(r=>r.mpd).length,tk:rs.reduce((s,r)=>s+r.offT,0),tm:rs.reduce((s,r)=>s+r.offM,0),pct:t?full/t*100:0}};
+const grp=(rs,k)=>{const m={};rs.forEach(r=>(m[r[k]]=m[r[k]]||[]).push(r));return m};
+const col=p=>p>=90?['#d1fae5','#065f46']:p>=85?['#fef3c7','#92400e']:['#fee2e2','#991b1b'];
+const FILTERS=[['off','All offline'],['part','Partially offline'],['fulloff','Fully offline'],['atg','ATG offline'],['mpd','MPD offline'],['full','Fully online'],['all','All ROs']];
+const test={off:r=>r.offRO,part:r=>r.cat=='part',fulloff:r=>r.cat=='fulloff',atg:r=>r.atg,mpd:r=>r.mpd,full:r=>r.full,all:()=>true};
+const SORT={fulloff:0,part:1,full:2};
+function detailHTML(i){
+ const A=AREAS[i],cur=FILT[i]||'off',list=A.ros.filter(test[cur]).sort((a,b)=>SORT[a.cat]-SORT[b.cat]||b.offT+b.offM-a.offT-a.offM||a.id.localeCompare(b.id));
+ let h='<div class="chips">'+FILTERS.map(([k,l])=>`<button class="chip ${k==cur?'on':''}" onclick="setF(${i},'${k}')">${l}<b>${A.ros.filter(test[k]).length}</b></button>`).join('')+'</div>';
+ h+='<div class="in-wrap"><table class="in"><tr><th>#</th><th>RO Name</th><th>RO ID</th><th>Vendor</th><th>MPD on-boarded</th><th>MPD online</th><th>MPD offline</th><th>Tanks on-boarded</th><th>Tanks online</th><th>Tanks offline</th><th>Avg RO online %</th><th>Overall</th><th>What is offline</th></tr>';
+ h+=list.length?list.map((r,n)=>{const[l,bg,fg]=META[r.cat];return`<tr><td>${n+1}</td><td class="l">${esc(r.id)}</td><td>${esc(r.rid)}</td><td>${esc(r.vendor)}</td><td>${r.onM}</td><td>${r.lnM}</td><td class="${r.offM?'bad':''}">${r.offM}</td><td>${r.onT}</td><td>${r.lnT}</td><td class="${r.offT?'bad':''}">${r.offT}</td><td>${r.apv==null?'':+r.apv.toFixed(2)}</td><td><span class="bd" style="background:${bg};color:${fg}">${l}</span></td><td>${r.reason}</td></tr>`}).join(''):'<tr><td colspan="14" style="padding:16px;color:#64748b">No ROs in this category 🎉</td></tr>';
+ return h+'</table></div>'}
+window.setF=(i,k)=>{FILT[i]=k;const d=document.getElementById('dt'+i);if(d)d.firstChild.innerHTML=detailHTML(i)};
+window.tog=i=>{const r=document.getElementById('ar'+i),d=document.getElementById('dt'+i);
+ if(d){d.remove();r.classList.remove('open');return}
+ const t=document.createElement('tr');t.className='dt';t.id='dt'+i;t.innerHTML=`<td colspan="12">${detailHTML(i)}</td>`;r.after(t);r.classList.add('open')};
+function render(){
+ const rs=subset(),A=agg(rs);
+ $('kpis').innerHTML=[['Total ROs',A.t,'#3b82f6','across '+Object.keys(grp(rs,'area')).length+' sales areas'],['Fully online',A.full,'#10b981',''],['Total offline ROs',A.off,'#ef4444','partially + fully offline'],['Partially offline',A.part,'#f59e0b','some ATG/MPD offline, rest online'],['Fully offline',A.fo,'#b91c1c','nothing online at the RO'],['ATG offline ROs',A.atg,'#d97706','ROs with any tank offline'],['MPD offline ROs',A.mp,'#ec4899','ROs with any MPD offline'],['Offline tanks',A.tk,'#8b5cf6',''],['Offline MPDs',A.tm,'#6366f1',''],['% Fully online',A.pct.toFixed(2)+'%','#0ea5e9','']]
+  .map(([a,b,c,d])=>`<div class="k" style="--c:${c}"><span>${a}</span><b>${typeof b=='number'?b.toLocaleString():b}</b><i>${d||'&nbsp;'}</i></div>`).join('');
+ let h='<tr><th>SL No.</th><th>Sales Area</th><th>Total no of RO\'s</th><th>Fully online RO\'s</th><th>Partially offline RO\'s</th><th>Fully offline RO\'s</th><th>Total offline RO\'s<br>(ATG or MPD)</th><th>ATG offline RO\'s</th><th>MPD offline RO\'s</th><th>No. of offline tanks</th><th>No. of offline MPDs</th><th>% of fully online</th></tr>',n=0;AREAS=[];FILT=FILT||{};
+ const row=(cls,name,a,idx)=>{n++;const[bg,fg]=col(a.pct),at=idx==null?'':` id="ar${idx}" onclick="tog(${idx})" title="Click to see ROs"`;
+  return`<tr class="${cls}${idx==null?'':' ar'}"${at}><td>${n}</td><td class="l">${esc(name)}</td><td>${a.t}</td><td>${a.full}</td><td>${a.part}</td><td>${a.fo}</td><td>${a.off}</td><td>${a.atg}</td><td>${a.mp}</td><td>${a.tk}</td><td>${a.tm}</td><td>${cls?a.pct.toFixed(2):`<span class="pill" style="background:${bg};color:${fg}">${a.pct.toFixed(2)}</span>`}</td></tr>`};
+ const S=grp(rs,'state'),states=Object.keys(S).sort();
+ states.forEach(s=>{const T=grp(S[s],'terr');Object.keys(T).sort().forEach((t,ti)=>{
+   const A2=grp(T[t],'area');Object.keys(A2).sort().forEach(a=>{const g=agg(A2[a]);AREAS.push({name:a,g,ros:A2[a]});h+=row('',a,g,AREAS.length-1)});
+   h+=row(ti%2?'t2':'t1',ABBR[t.toLowerCase()]||t.toUpperCase(),agg(T[t]))});
+   h+=row('st',s.toUpperCase(),agg(S[s]))});
+ if(states.length>1)h+=row('gt','EAST (ALL STATES)',A);
+ $('tbl').innerHTML=h;
+ $('note').innerHTML='<b>Definitions</b> — Status is taken directly from the sheet\'s Avg RO Online % column. <b>Fully online RO</b> = 100. <b>Fully offline RO</b> = 0. <b>Partially offline RO</b> = anything between 0 and 100. <b>Total offline</b> = partially + fully offline. <b>ATG offline RO</b> / <b>MPD offline RO</b> = ROs with at least one offline tank / MPD (an RO can be in both). Offline tanks / MPDs are used from the sheet\'s offline columns when present, otherwise on-boarded − online.';
+ Object.values(charts).forEach(c=>c.destroy());const L=AREAS.map(a=>a.name.replace(' Retail','')),G=AREAS.map(a=>a.g);
+ Chart.defaults.font.family='Inter,Segoe UI,sans-serif';
+ const mk=(id,cfg)=>{cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{});charts[id]=new Chart($(id),cfg)};
+ mk('c1',{type:'bar',data:{labels:L,datasets:[{label:'Fully online',data:G.map(g=>g.full),backgroundColor:'#10b981'},{label:'Partially offline',data:G.map(g=>g.part),backgroundColor:'#f59e0b'},{label:'Fully offline',data:G.map(g=>g.fo),backgroundColor:'#ef4444'}]},options:{indexAxis:'y',scales:{x:{stacked:true},y:{stacked:true}}}});
+ const sc={'Fully online':0,'Partially offline: ATG only':0,'Partially offline: MPD only':0,'Partially offline: ATG + MPD':0,'Fully offline':0};
+ rs.forEach(r=>{const k=r.cat=='full'?'Fully online':r.cat=='fulloff'?'Fully offline':'Partially offline: '+(r.atg&&r.mpd?'ATG + MPD':r.atg?'ATG only':'MPD only');sc[k]++});
+ const cm={'Fully online':'#10b981','Partially offline: ATG only':'#f59e0b','Partially offline: MPD only':'#3b82f6','Partially offline: ATG + MPD':'#a855f7','Fully offline':'#ef4444'};
+ const ks=Object.keys(sc).filter(k=>sc[k]>0);
+ mk('c2',{type:'doughnut',data:{labels:ks,datasets:[{data:ks.map(k=>sc[k]),backgroundColor:ks.map(k=>cm[k]),borderWidth:2}]},options:{cutout:'62%',plugins:{legend:{position:'bottom'}}}});
+ mk('c3',{type:'bar',data:{labels:L,datasets:[{label:'% fully online',data:G.map(g=>+g.pct.toFixed(2)),backgroundColor:G.map(g=>g.pct>=90?'#10b981':g.pct>=85?'#f59e0b':'#ef4444'),borderRadius:6}]},options:{plugins:{legend:{display:false}},scales:{y:{min:Math.max(0,Math.floor(Math.min(...G.map(g=>g.pct))-5)),max:100}}}});
+ mk('c4',{type:'bar',data:{labels:L,datasets:[{label:'Offline tanks',data:G.map(g=>g.tk),backgroundColor:'#8b5cf6',borderRadius:4},{label:'ATG offline ROs',data:G.map(g=>g.atg),backgroundColor:'#f59e0b',borderRadius:4},{label:'MPD offline ROs',data:G.map(g=>g.mp),backgroundColor:'#ec4899',borderRadius:4}]}});
+ const V=grp(rs,'vendor'),vn=Object.keys(V).sort((a,b)=>V[b].filter(r=>r.offRO).length-V[a].filter(r=>r.offRO).length),vc=(v,c)=>V[v].filter(r=>r.cat==c).length;
+ $('vcard').classList.toggle('hide',vn.length<2||(vn.length==1&&vn[0]=='Unknown'));
+ mk('c5',{type:'bar',data:{labels:vn,datasets:[{label:'Fully online',data:vn.map(v=>vc(v,'full')),backgroundColor:'#10b981'},{label:'Partially offline',data:vn.map(v=>vc(v,'part')),backgroundColor:'#f59e0b'},{label:'Fully offline',data:vn.map(v=>vc(v,'fulloff')),backgroundColor:'#ef4444'}]},options:{scales:{y:{type:'logarithmic'}}}});
+}
+$('exp').onclick=()=>{
+ const c=$('tbl').cloneNode(true);c.querySelectorAll('.dt').forEach(e=>e.remove());
+ const wb=XLSX.utils.table_to_book(c,{sheet:'Summary'}),rs=subset();
+ const det=rs.slice().sort((a,b)=>a.state.localeCompare(b.state)||a.area.localeCompare(b.area)||SORT[a.cat]-SORT[b.cat]).map(r=>({State:r.state,Territory:r.terr,'Sales Area':r.area,'RO Name':r.id,'RO ID':r.rid,Vendor:r.vendor,'MPD On-boarded':r.onM,'MPD Online':r.lnM,'MPD Offline':r.offM,'Tanks On-boarded':r.onT,'Tanks Online':r.lnT,'Tanks Offline':r.offT,'Avg RO online %':r.apv==null?'':r.apv,Overall:META[r.cat][0],'What is offline':r.reason}));
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'RO Details');
+ XLSX.writeFile(wb,'automation_summary.xlsx')};
+
+function go(n){[1,2].forEach(i=>{$('pg'+i).classList.toggle('hide',i!=n);$('tb'+i).classList.toggle('on',i==n)});
+ $('tools').classList.toggle('hide',n!=1||!ALL.length);
+ $('sub').textContent=n==1?(ALL.length?$('sub').dataset.a||$('sub').textContent:'Upload your raw automation data (.xlsx, .xls, .csv) to generate the summary'):(SALL.length?'Stock data · '+SALL.length+' ROs loaded':'Upload your Dry RO stock sheet to see severe low and low stock ROs');
+ $('h1').textContent=n==1?'📊 RO Automation Dashboard':'⛽ RO Stock Dashboard'}
+const f2=$('f2'),drop2=$('drop2');let DG={},SALL=[],SCH={},SFILT={},SAREAS=[],SSKIP=0;
+f2.onchange=e=>e.target.files[0]&&loadStock(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>drop2.addEventListener(t,e=>{e.preventDefault();drop2.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop2.addEventListener(t,e=>{e.preventDefault();drop2.classList.remove('over')}));
+drop2.addEventListener('drop',e=>e.dataTransfer.files[0]&&loadStock(e.dataTransfer.files[0]));
+const sb=v=>{if(v==null)return'nd';const r=Math.round(v);return r<=10?'sv':r<=25?'lw':'ok'},SBL={sv:'Severe low',lw:'Low',ok:'OK',nd:'No data'};
+function loadStock(file){const r=new FileReader();r.onload=e=>{try{
+ const wb=XLSX.read(e.target.result,{type:'array'});let rows=[];
+ for(const n of wb.SheetNames){rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''});if(rows.length&&Object.keys(rows[0]).some(k=>nk(k)=='productname'))break}
+ procStock(rows,file.name,true)}catch(err){alert('Could not read file: '+err)}};r.readAsArrayBuffer(file)}
+function procStock(rows,name,save){try{
+ const L=rows.map(r=>{const o={};for(const k in r)o[nk(k)]=r[k];return o});
+ const pv2=v=>{const t=cl(v).replace('%','').replace(/,/g,'');return t===''||isNaN(+t)||+t<0?null:+t};
+ const ok=L.filter(o=>cl(o.salesarea)&&cl(o.roid)&&!/^(total|grand)/i.test(cl(o.roid)));
+ const vals=ok.map(o=>pv2(o.stock)).filter(x=>x!=null);
+ const sp=ok.map(o=>pv2(o.stock)).filter(x=>x!=null).sort((a,b)=>a-b),p95=sp.length?sp[Math.floor(sp.length*0.95)]:0,sc=sp.length&&p95<=1.5?100:1;
+ const M={};SSKIP=0;DG={rows:0,other:0,neg:0,blank:0,dup:0,seen:{}};
+ ok.forEach(o=>{const pr=cl(o.productname).toUpperCase(),k=(pr=='EBMS'||pr=='MS')?'ms':pr=='HSD'?'hsd':null;if(!k){DG.other++;return}DG.rows++;
+  const id=cl(o.roid),x=M[id]=M[id]||{id,name:cl(o.retailoutlet),vendor:cl(o.ravendor)||'-',state:cl(o.state)||'Unknown',terr:cl(o.territory)||'-',area:cl(o.salesarea),ms:null,hsd:null};
+  const rawS=cl(o.stock).replace('%','');if(rawS==='')DG.blank++;else if(+rawS<0)DG.neg++;const dk=id+'|'+k;if(DG.seen[dk])DG.dup++;DG.seen[dk]=1;const v=pv2(o.stock);if(v!=null){const nv=v*sc;x[k]=x[k]==null?nv:Math.min(x[k],nv)}});
+ SALL=Object.values(M).filter(x=>x.ms!=null||x.hsd!=null);SSKIP=Object.keys(M).length-SALL.length;
+ if(!SALL.length)throw 'No EBMS / HSD rows with a Stock % found';
+ SALL.forEach(x=>{x.mb=sb(x.ms);x.hb=sb(x.hsd);x.cs=x.mb=='sv'&&x.hb=='sv';x.cl=x.mb=='lw'&&x.hb=='lw'});
+ const sts=[...new Set(SALL.map(r=>r.state))].sort();$('st2').innerHTML='<option value="">All states</option>'+sts.map(s=>`<option>${esc(s)}</option>`).join('');
+ $('tr2').innerHTML='';$('tr2').classList.add('hide');SFILT={};
+ drop2.classList.add('hide');$('dash2').classList.remove('hide');if(save)go(2);else if(!$('pg2').classList.contains('hide'))go(2);renderStock();if(save)persist('stock',rows,name)}catch(err){alert('Could not read file: '+err)}}
+$('st2').onchange=()=>{SFILT={};const sf=$('st2').value,t=$('tr2');if(sf){const ts=[...new Set(SALL.filter(r=>r.state==sf).map(r=>r.terr))].sort();t.innerHTML='<option value="">All territories</option>'+ts.map(x=>`<option>${esc(x)}</option>`).join('');t.classList.remove('hide')}else{t.innerHTML='';t.classList.add('hide')}renderStock()};
+$('tr2').onchange=()=>{SFILT={};renderStock()};
+const ssub=()=>{const sf=$('st2').value,tf=$('tr2').value;return SALL.filter(r=>(!sf||r.state==sf)&&(!tf||r.terr==tf))};
+const sagg=rs=>({t:rs.length,m1:rs.filter(r=>r.mb=='sv').length,h1:rs.filter(r=>r.hb=='sv').length,c1:rs.filter(r=>r.cs).length,m2:rs.filter(r=>r.mb=='lw').length,h2:rs.filter(r=>r.hb=='lw').length,c2:rs.filter(r=>r.cl).length});
+const STEST={ms1:r=>r.mb=='sv',hs1:r=>r.hb=='sv',cm1:r=>r.cs,ms2:r=>r.mb=='lw',hs2:r=>r.hb=='lw',cm2:r=>r.cl,any:r=>r.mb=='sv'||r.hb=='sv'||r.mb=='lw'||r.hb=='lw',all:()=>true};
+const G1=[['ms1','MS'],['hs1','HSD'],['cm1','Common (MS + HSD)']],G2=[['ms2','MS'],['hs2','HSD'],['cm2','Common (MS + HSD)']];
+const rk=r=>Math.min(r.ms==null?999:r.ms,r.hsd==null?999:r.hsd);
+const sbar=(v,b)=>v==null?'<span class="mu">no data</span>':`<span class="sbar"><i class="${b}" style="width:${Math.min(100,Math.max(3,v))}%"></i></span><b class="t${b}">${Math.round(v)}%</b>`;
+const issue=r=>{if(r.cs)return['MS + HSD both severe low','sv'];if(r.cl)return['MS + HSD both low','lw'];
+ const p=[];if(r.mb=='sv'||r.mb=='lw')p.push('MS '+(r.mb=='sv'?'severe low':'low'));if(r.hb=='sv'||r.hb=='lw')p.push('HSD '+(r.hb=='sv'?'severe low':'low'));
+ return p.length?[p.join(' · '),(r.mb=='sv'||r.hb=='sv')?'sv':'lw']:['Stock OK','ok']};
+const sst=i=>SFILT[i]||(SFILT[i]={f:'any',q:'',o:'low'});
+function slist(i){const A=SAREAS[i],st=sst(i),q=st.q.toLowerCase();
+ const all=A.ros.filter(STEST[st.f]),list=all.filter(r=>!q||(r.name+' '+r.id+' '+r.vendor).toLowerCase().includes(q)).sort(st.o=='name'?(a,b)=>a.name.localeCompare(b.name):(a,b)=>rk(a)-rk(b));
+ let h=`<div class="cnt">Showing <b>${list.length}</b> RO(s)</div><div class="in-wrap"><table class="in"><tr><th>#</th><th class="l">Retail Outlet</th><th>MS (EBMS) stock</th><th>HSD stock</th><th>What is low</th></tr>`;
+ h+=list.length?list.map((r,n)=>{const[t,c]=issue(r);return`<tr><td>${n+1}</td><td class="l rn"><b>${esc(r.name)}</b><small>ID ${esc(r.id)} · ${esc(r.vendor)}</small></td><td class="bc">${sbar(r.ms,r.mb)}</td><td class="bc">${sbar(r.hsd,r.hb)}</td><td><span class="bd ${c}">${t}</span></td></tr>`}).join(''):'<tr><td colspan="5" style="padding:18px;color:#64748b">No ROs match this filter</td></tr>';
+ return h+'</table></div>'}
+function sdetail(i){const A=SAREAS[i],st=sst(i),chip=([k,l],c)=>`<button class="chip ${c} ${k==st.f?'on':''}" onclick="setSF(${i},'${k}')">${l}<b>${A.ros.filter(STEST[k]).length}</b></button>`;
+ return`<div class="dh"><div class="d1">${esc(A.name)} <span>· ${esc(A.terr)} territory · ${A.ros.length} ROs with stock data</span></div>
+<div class="fg"><label>Severe low (0–10%)</label>${G1.map(x=>chip(x,'c1')).join('')}</div>
+<div class="fg"><label>Low (11–25%)</label>${G2.map(x=>chip(x,'c2')).join('')}</div>
+<div class="fg"><label>Show</label>${chip(['any','All dry / low ROs'],'')}${chip(['all','All ROs'],'')}<input class="srch" placeholder="Search RO name, ID or vendor" value="${esc(st.q)}" oninput="setQ(${i},this.value)"><select class="so" onchange="setO(${i},this.value)"><option value="low" ${st.o=='low'?'selected':''}>Lowest stock first</option><option value="name" ${st.o=='name'?'selected':''}>RO name A–Z</option></select></div></div><div id="sl${i}">${slist(i)}</div>`}
+const redo=i=>{const d=$('sd'+i);if(d)d.firstChild.innerHTML=sdetail(i)};
+window.setSF=(i,k)=>{sst(i).f=k;redo(i)};window.setO=(i,v)=>{sst(i).o=v;$('sl'+i).innerHTML=slist(i)};window.setQ=(i,v)=>{sst(i).q=v;$('sl'+i).innerHTML=slist(i)};
+window.stog=i=>{const r=$('sa'+i),d=$('sd'+i);if(d){d.remove();r.classList.remove('open');return}
+ const t=document.createElement('tr');t.className='dt ta'+SAREAS[i].tk;t.id='sd'+i;t.innerHTML=`<td colspan="8">${sdetail(i)}</td>`;r.after(t);r.classList.add('open')};
+window.ttog=k=>{const b=$('tt'+k),c=b.classList.toggle('col');document.querySelectorAll('.ta'+k).forEach(e=>e.classList.toggle('hide',c))};
+function renderStock(){
+ const rs=ssub(),A=sagg(rs);
+ $('kpis2').innerHTML=[['ROs with stock data',A.t,'#3b82f6','MS and / or HSD'],['MS dry ROs (0–10%)',A.m1,'#dc2626','EBMS severe low'],['HSD dry ROs (0–10%)',A.h1,'#b91c1c','HSD severe low'],['Common dry ROs (0–10%)',A.c1,'#7f1d1d','MS + HSD both severe low'],['MS low ROs (11–25%)',A.m2,'#f59e0b','EBMS low'],['HSD low ROs (11–25%)',A.h2,'#d97706','HSD low'],['Common low ROs (11–25%)',A.c2,'#92400e','MS + HSD both low']]
+  .map(([a,b,c,d])=>`<div class="k" style="--c:${c}"><span>${a}</span><b>${b.toLocaleString()}</b><i>${d}</i></div>`).join('');
+ let h='<tr><th rowspan="2">SL NO.</th><th rowspan="2">SALES AREA</th><th colspan="3" class="grp">SEVERE LOW (0-10)%</th><th colspan="3" class="grp gs">LOW (11-25)%</th></tr><tr><th>MS DRY RO\'s</th><th>HSD DRY RO\'s</th><th>COMMON RO\'s<br>(MS+HSD)</th><th class="gs">MS DRY RO\'s</th><th>HSD DRY RO\'s</th><th>COMMON RO\'s<br>(MS+HSD)</th></tr>';SAREAS=[];let tk=0,sn=0;
+ const cells=a=>[a.m1,a.h1,a.c1,a.m2,a.h2,a.c2].map((v,k)=>`<td class="${k==3?'gs':''}">${v}</td>`).join('');
+ const S=grp(rs,'state'),states=Object.keys(S).sort();
+ states.forEach(s=>{const T=grp(S[s],'terr');
+  Object.keys(T).sort().forEach((t,ti)=>{const k=tk++,G=grp(T[t],'area'),an=Object.keys(G).sort();
+   an.forEach(a=>{const g=sagg(G[a]);SAREAS.push({name:a,terr:t,tk:k,g,ros:G[a]});const idx=SAREAS.length-1;
+    h+=`<tr class="ar ta${k}" id="sa${idx}" onclick="stog(${idx})" title="Click to see ROs"><td>${++sn}</td><td class="l">${esc(a)}</td>${cells(g)}</tr>`});
+   h+=`<tr class="${ti%2?'t2':'t1'} tt" id="tt${k}" onclick="ttog(${k})" title="Click to fold / unfold this territory"><td>${++sn}</td><td class="l"><span class="car">▼</span>${esc(ABBR[t.toLowerCase()]||t.toUpperCase())}</td>${cells(sagg(T[t]))}</tr>`});
+  h+=`<tr class="st"><td>${++sn}</td><td class="l">${esc(s.toUpperCase())}</td>${cells(sagg(S[s]))}</tr>`});
+ if(states.length>1)h+=`<tr class="gt"><td>${++sn}</td><td class="l">ALL STATES</td>${cells(A)}</tr>`;
+ $('tbl2').innerHTML=h;
+ $('note2').innerHTML='<b>Definitions</b> — Stock % is read directly from the sheet. <b>Severe low</b> = stock 0% to 10% (10% itself is severe low). <b>Low</b> = above 10% up to 25% (11–25%). <b>MS</b> = EBMS rows only (Speed and other products are ignored). <b>MS / HSD dry RO</b> = RO whose MS / HSD stock is in that range. <b>Common RO</b> = RO where both MS and HSD are in that range. ROs with no stock value (blank or -1) for a product are not counted for it'+(SSKIP?` · ${SSKIP} RO(s) had no stock value for either product.`:'.')+`<br><b>Data check</b> — ${DG.rows} EBMS/HSD rows read for ${SALL.length+SSKIP} ROs · ${DG.other} rows of other products ignored · ${DG.blank} blank and ${DG.neg} negative stock values treated as no data · ${DG.dup} extra rows for an RO+product (lowest stock used). Stock % is rounded to a whole number before it is put in a range.`;
+ Object.values(SCH).forEach(c=>c.destroy());const LB=SAREAS.map(a=>a.name.replace(' Retail','')+' ('+(ABBR[a.terr.toLowerCase()]||a.terr.slice(0,4).toUpperCase())+')'),G=SAREAS.map(a=>a.g),all=rs;
+ const mk=(id,cfg)=>{cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{});SCH[id]=new Chart($(id),cfg)};
+ const ds=(l,d,c)=>({label:l,data:d,backgroundColor:c,borderRadius:4});
+ mk('s1',{type:'bar',data:{labels:LB,datasets:[ds('MS',G.map(g=>g.m1),'#3b82f6'),ds('HSD',G.map(g=>g.h1),'#f97316'),ds('Common',G.map(g=>g.c1),'#dc2626')]}});
+ mk('s2',{type:'bar',data:{labels:LB,datasets:[ds('MS',G.map(g=>g.m2),'#3b82f6'),ds('HSD',G.map(g=>g.h2),'#f97316'),ds('Common',G.map(g=>g.c2),'#f59e0b')]}});
+ const cnt=(k,b)=>all.filter(r=>r[k]==b).length;
+ mk('s3',{type:'bar',data:{labels:['MS','HSD'],datasets:[ds('Severe low',[cnt('mb','sv'),cnt('hb','sv')],'#dc2626'),ds('Low',[cnt('mb','lw'),cnt('hb','lw')],'#f59e0b'),ds('OK (above 25%)',[cnt('mb','ok'),cnt('hb','ok')],'#10b981')]},options:{indexAxis:'y',scales:{x:{stacked:true},y:{stacked:true}}}});
+ const BK=[[0,10],[10,25],[25,50],[50,75],[75,1e9]],bl=['0–10%','11–25%','26–50%','51–75%','76%+'],bc=(k,[a,b])=>all.filter(r=>r[k]!=null&&(a==0?Math.round(r[k])<=b:Math.round(r[k])>a&&Math.round(r[k])<=b)).length;
+ mk('s4',{type:'bar',data:{labels:bl,datasets:[ds('MS',BK.map(b=>bc('ms',b)),'#3b82f6'),ds('HSD',BK.map(b=>bc('hsd',b)),'#f97316')]}});
+}
+$('exp2').onclick=()=>{const c=$('tbl2').cloneNode(true);c.querySelectorAll('.dt').forEach(e=>e.remove());
+ const wb=XLSX.utils.table_to_book(c,{sheet:'Stock summary'}),rs=ssub();
+ const det=rs.slice().sort((a,b)=>a.area.localeCompare(b.area)||rk(a)-rk(b)).map(r=>({State:r.state,Territory:r.terr,'Sales Area':r.area,'RO Name':r.name,'RO ID':r.id,Vendor:r.vendor,'MS stock %':r.ms==null?'':r.ms,'MS status':SBL[r.mb],'HSD stock %':r.hsd==null?'':r.hsd,'HSD status':SBL[r.hb],'Common severe low':r.cs?'Yes':'','Common low':r.cl?'Yes':''}));
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'RO Details');XLSX.writeFile(wb,'stock_summary.xlsx')};
+
+// ===== Shared data: embedded in the published page, so anyone with the link sees it (no sign-in) =====
+let SAVED={};
+const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=32768)s+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));return btoa(s)};
+const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function pack(o){const st=new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream('gzip'));return b64(new Uint8Array(await new Response(st).arrayBuffer()))}
+async function unpack(t){const st=new Blob([unb64(t)]).stream().pipeThrough(new DecompressionStream('gzip'));return JSON.parse(await new Response(st).text())}
+function syncMsg(t,bad){let e=$('syncb');if(!e){e=document.createElement('div');e.id='syncb';e.style.cssText='position:fixed;right:12px;bottom:12px;z-index:50;color:#fff;padding:7px 12px;border-radius:8px;font:12px system-ui;max-width:320px;opacity:.93';document.body.appendChild(e)}e.style.background=bad?'#991b1b':'#0f172a';e.textContent=t;clearTimeout(e._t);e._t=setTimeout(()=>e.remove(),bad?10000:4000)}
+async function persist(){syncMsg('Shown on your screen only. To update for everyone, replace stock.xlsx / ro.xlsx in the GitHub repo.',1)}
+const rowsFrom=(buf,test)=>{const wb=XLSX.read(buf,{type:'array'});let rows=[];for(const n of wb.SheetNames){rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''});if(rows.length&&test(rows[0]))break}return rows};
+async function fetchSheet(url){const r=await fetch(url+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;return r.arrayBuffer()}
+(async()=>{let got=0;
+ try{SAVED=JSON.parse($('saved').textContent.trim()||'{}')}catch(e){SAVED={}}
+ // 1) ro.xlsx next to this page
+ try{const rows=rowsFrom(await fetchSheet('ro.xlsx'),r=>'salesarea' in Object.fromEntries(Object.keys(r).map(k=>[nk(k),1])));procAuto(rows,'ro.xlsx',false);got++}catch(e){}
+ // 2) stock.xlsx next to this page, else the copy built into this file
+ let st=0;
+ try{const rows=rowsFrom(await fetchSheet('stock.xlsx'),r=>Object.keys(r).some(k=>nk(k)=='productname'));procStock(rows,'stock.xlsx',false);st=1;got++}catch(e){}
+ if(!st&&SAVED.stock){try{procStock(await unpack(SAVED.stock.d),SAVED.stock.name,false);got++}catch(e){}}
+ if(got)syncMsg('Data loaded');else syncMsg('Could not find stock.xlsx / ro.xlsx next to this page. Upload them to the same GitHub folder (and open the Pages link, not the local file).',1);
+ go(ALL.length||!SALL.length?1:2)})();
+</script></body></html>
